@@ -25,7 +25,7 @@ class KafkaConfig(BaseSettings):
     KAFKA_TOPIC: str
 
 
-class BaseSettings(BaseSettings):
+class BaseConfig(BaseSettings):
     class Config:
         env_file = ".env"
 
