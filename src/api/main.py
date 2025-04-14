@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from .files import router
-from containers import Container
 from base_exception import BaseAppException
+from containers import Container
+
+from .files import router
 
 
 def create_app(container: Container) -> FastAPI:
@@ -25,7 +26,4 @@ app = create_app(Container())
 
 @app.exception_handler(BaseAppException)
 async def base_exception_handler(request, exc: BaseAppException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=exc.message
-    )
+    return JSONResponse(status_code=exc.status_code, content=exc.message)
