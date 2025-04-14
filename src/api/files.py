@@ -32,7 +32,7 @@ async def get_filename(
 
 @router.put("/update")
 @inject
-async def upload_file(
+async def update_file(
     filename: str,
     file: UploadFile = File(...),
     file_manager: FileManager = Depends(Provide[Container.file_manager_use_case]),
