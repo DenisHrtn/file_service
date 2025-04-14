@@ -1,12 +1,13 @@
-from application.use_cases.file_manager_use_case import FileManagerUseCase
-from application.interfaces.minio_interface import IMinioService
-from application.interfaces.get_content_type import IGetContentType
-from application.enums.file_type import FileTypeEnum
 from application.enums.buckets import BucketTypeEnum
+from application.enums.file_type import FileTypeEnum
+from application.interfaces.get_content_type import IGetContentType
+from application.interfaces.minio_interface import IMinioService
+from application.use_cases.file_manager_use_case import FileManagerUseCase
+
 from .exceptions import (
-    FileDoesNotExistException,
     EmptyFilenameException,
-    EmptyFileTypeException
+    EmptyFileTypeException,
+    FileDoesNotExistException,
 )
 
 
@@ -25,19 +26,18 @@ class FileManager(FileManagerUseCase):
         else:
             bucket_type = BucketTypeEnum.TASKS
 
-        file_exists = await self.minio_service.file_exists(filename=filename, bucket_type=bucket_type)
+        file_exists = await self.minio_service.file_exists(
+            filename=filename, bucket_type=bucket_type
+        )
 
         if not file_exists:
             raise FileDoesNotExistException()
 
-        return await self.minio_service.get_file_url(filename=filename, bucket_type=bucket_type)
+        return await self.minio_service.get_file_url(
+            filename=filename, bucket_type=bucket_type
+        )
 
-    async def upload(
-            self,
-            file,
-            file_type: str,
-            entity: str
-    ) -> str:
+    async def upload(self, file, file_type: str, entity: str) -> str:
         media_index = 0
 
         match file_type:
@@ -45,7 +45,9 @@ class FileManager(FileManagerUseCase):
                 bucket_type = BucketTypeEnum.AVATARS
             case FileTypeEnum.TASKS:
                 bucket_type = BucketTypeEnum.TASKS
-                media_index = await self.minio_service.get_last_index(entity, bucket_type)
+                media_index = await self.minio_service.get_last_index(
+                    entity, bucket_type
+                )
                 media_index += 1
             case _:
                 raise EmptyFileTypeException()
@@ -56,7 +58,7 @@ class FileManager(FileManagerUseCase):
             file=file,
             filename=filename,
             content_type=content_type,
-            bucket_name=bucket_type
+            bucket_name=bucket_type,
         )
 
         return file_url
@@ -69,12 +71,14 @@ class FileManager(FileManagerUseCase):
 
         if media_index is None:
             bucket_type = BucketTypeEnum.AVATARS
-            filename = f'{entity}'
+            filename = f"{entity}"
         else:
             bucket_type = BucketTypeEnum.TASKS
-            filename = f'{entity}/{filename}'
+            filename = f"{entity}/{filename}"
         content_type = await self.content_type.get_content_type(file.filename)
-        file_exists = await self.minio_service.file_exists(filename=filename, bucket_type=bucket_type)
+        file_exists = await self.minio_service.file_exists(
+            filename=filename, bucket_type=bucket_type
+        )
 
         if not file_exists:
             raise FileDoesNotExistException()
@@ -83,7 +87,7 @@ class FileManager(FileManagerUseCase):
             file=file,
             filename=filename,
             content_type=content_type,
-            bucket_type=bucket_type
+            bucket_type=bucket_type,
         )
 
         return file_url
@@ -98,21 +102,25 @@ class FileManager(FileManagerUseCase):
             bucket_type = BucketTypeEnum.AVATARS
         else:
             bucket_type = BucketTypeEnum.TASKS
-        file_exists = await self.minio_service.file_exists(filename=filename, bucket_type=bucket_type)
+        file_exists = await self.minio_service.file_exists(
+            filename=filename, bucket_type=bucket_type
+        )
 
         if not file_exists:
             raise FileDoesNotExistException()
 
-        return await self.minio_service.delete_file(filename=filename, bucket_type=bucket_type)
+        return await self.minio_service.delete_file(
+            filename=filename, bucket_type=bucket_type
+        )
 
     async def generate_unique_name(self, entity: str, media_index: str) -> str:
         if media_index:
-            return f'{entity}/{media_index}'
+            return f"{entity}/{media_index}"
 
-        return f'{entity}'
+        return f"{entity}"
 
     async def parse(self, filename: str):
-        parts = filename.split('/')
+        parts = filename.split("/")
         task_id = parts[0]
         media_index = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0
         return task_id, media_index
